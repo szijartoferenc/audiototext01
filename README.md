@@ -6,7 +6,7 @@
 
 ### ✅ Features
 
-- Supports **English**, **German**, and **Esperanto**
+- Supports **English**, **German**
 - Uses **free**, open-source speech recognition models
 - No API key or paid subscription required
 - Upload a 16-bit **mono WAV** audio file
@@ -36,7 +36,7 @@ Az **AudioToText** egy böngészőalapú beszédfelismerő alkalmazás, amely a 
 
 ### ✅ Funkciók
 
-- **Angol**, **német** és **eszperantó** nyelv támogatása
+- **Angol**, **német** nyelv támogatása
 - **Ingyenes**, nyílt forráskódú modellek
 - Nincs szükség API kulcsra vagy előfizetésre
 - Tölts fel **16 bites mono WAV** hangfájlt
