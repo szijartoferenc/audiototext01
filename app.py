@@ -9,6 +9,7 @@ from vosk import Model, KaldiRecognizer
 import wave
 import json
 import re
+import torch
 
 st.set_page_config(page_title="🗣️ Hang → Szöveg konvertáló", layout="centered")
 
@@ -19,21 +20,21 @@ LANGUAGES = {
 
 TEXTS = {
     "de": {
-    "title": "🗣️ Audio → Text Konverter",
-    "upload": "Nur WAV-Dateien hochladen",
-    "processing": "⏳ Verarbeitung läuft...",
-    "done": "✅ Verarbeitung abgeschlossen!",
-    "recognized": "📝 Erkannter Text:",
-    "export_docx": "📂 Als DOCX speichern",
-    "export_pdf": "📄 Als PDF speichern",
-    "export_srt": "🎬 Als SRT exportieren",
-    "stats": "📊 Statistik",
-    "words": "Wortanzahl",
-    "duration": "Geschätzte Dauer",
-    "model": "🧠 Modell auswählen",
-    "theme": "🎨 Thema",
-    "detected_lang": "🌍 Erkannte Sprache"
-},
+        "title": "🗣️ Audio → Text Konverter",
+        "upload": "Nur WAV-Dateien hochladen",
+        "processing": "⏳ Verarbeitung läuft...",
+        "done": "✅ Verarbeitung abgeschlossen!",
+        "recognized": "📝 Erkannter Text:",
+        "export_docx": "📂 Als DOCX speichern",
+        "export_pdf": "📄 Als PDF speichern",
+        "export_srt": "🎬 Als SRT exportieren",
+        "stats": "📊 Statistik",
+        "words": "Wortanzahl",
+        "duration": "Geschätzte Dauer",
+        "model": "🧠 Modell auswählen",
+        "theme": "🎨 Thema",
+        "detected_lang": "🌍 Erkannte Sprache"
+    },
     "en": {
         "title": "🗣️ Speech → Text Converter",
         "upload": "Upload WAV file only",
@@ -127,6 +128,14 @@ def export_srt_from_words(word_segments, max_duration=10.0):
         f.write(srt_output)
     return path
 
+def load_wav_file(wav_path):
+    waveform, sample_rate = torchaudio.load(wav_path)
+    if waveform.ndimension() != 2 or waveform.shape[0] != 1:
+        raise ValueError("⚠️ The audio file must be mono.")
+    if waveform.dtype != torch.int16:
+        waveform = waveform.to(torch.int16)
+    return waveform, sample_rate
+
 st.title(TEXT["title"])
 uploaded_file = st.file_uploader(TEXT["upload"], type=["wav"])
 
@@ -145,24 +154,10 @@ if uploaded_file is not None:
                 tmp.write(uploaded_file.read())
                 wav_path = tmp.name
 
-            # Előfeldolgozás: Mono és 16kHz
-            waveform, sample_rate = torchaudio.load(wav_path)
+            # Load the WAV file with the custom function
+            waveform, sample_rate = load_wav_file(wav_path)
 
-            # Ha több csatornás a fájl, mono-ra konvertáljuk
-            if waveform.shape[0] > 1:
-                waveform = waveform.mean(dim=0, keepdim=True)
-
-            # Ha nem 16 kHz-es a fájl, átméretezzük
-            if sample_rate != 16000:
-                resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=16000)
-                waveform = resampler(waveform)
-                sample_rate = 16000
-
-            # Elmentjük a preprocessed fájlt
-            preprocessed_path = tempfile.mktemp(suffix=".wav")
-            torchaudio.save(preprocessed_path, waveform, sample_rate)
-
-            wf = wave.open(preprocessed_path, "rb")
+            wf = wave.open(wav_path, "rb")
 
             if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
                 st.warning("⚠️ A fájl nem mono 16-bit WAV. Az eredmények pontatlanok lehetnek.")
@@ -209,7 +204,7 @@ if uploaded_file is not None:
             with col3:
                 st.download_button(TEXT["export_srt"], open(export_srt_from_words(segments), "rb"), file_name="output.srt")
 
-            os.remove(preprocessed_path)
+            os.remove(wav_path)
 
         except Exception as e:
             st.error(f"❌ Hiba történt: {e}")
