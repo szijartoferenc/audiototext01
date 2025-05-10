@@ -130,8 +130,9 @@ def export_srt_from_words(word_segments, max_duration=10.0):
 
 def load_wav_file(wav_path):
     waveform, sample_rate = torchaudio.load(wav_path)
+    # Ha a fájl több csatornás, átalakítjuk mono-ra
     if waveform.ndimension() != 2 or waveform.shape[0] != 1:
-        raise ValueError("⚠️ The audio file must be mono.")
+        waveform = waveform.mean(dim=0, keepdim=True)  # Átalakítás mono-ra
     if waveform.dtype != torch.int16:
         waveform = waveform.to(torch.int16)
     return waveform, sample_rate
