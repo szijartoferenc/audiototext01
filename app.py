@@ -145,9 +145,24 @@ if uploaded_file is not None:
                 tmp.write(uploaded_file.read())
                 wav_path = tmp.name
 
+            # Előfeldolgozás: Mono és 16kHz
             waveform, sample_rate = torchaudio.load(wav_path)
 
-            wf = wave.open(wav_path, "rb")
+            # Ha több csatornás a fájl, mono-ra konvertáljuk
+            if waveform.shape[0] > 1:
+                waveform = waveform.mean(dim=0, keepdim=True)
+
+            # Ha nem 16 kHz-es a fájl, átméretezzük
+            if sample_rate != 16000:
+                resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=16000)
+                waveform = resampler(waveform)
+                sample_rate = 16000
+
+            # Elmentjük a preprocessed fájlt
+            preprocessed_path = tempfile.mktemp(suffix=".wav")
+            torchaudio.save(preprocessed_path, waveform, sample_rate)
+
+            wf = wave.open(preprocessed_path, "rb")
 
             if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
                 st.warning("⚠️ A fájl nem mono 16-bit WAV. Az eredmények pontatlanok lehetnek.")
@@ -194,7 +209,7 @@ if uploaded_file is not None:
             with col3:
                 st.download_button(TEXT["export_srt"], open(export_srt_from_words(segments), "rb"), file_name="output.srt")
 
-            os.remove(wav_path)
+            os.remove(preprocessed_path)
 
         except Exception as e:
             st.error(f"❌ Hiba történt: {e}")
