@@ -13,7 +13,7 @@ import re
 st.set_page_config(page_title="🗣️ Hang → Szöveg konvertáló", layout="centered")
 
 LANGUAGES = {
-    "hu": "Magyar",
+    "de": "Deutsch",
     "en": "English"
 }
 
