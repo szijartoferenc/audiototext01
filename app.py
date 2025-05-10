@@ -128,13 +128,20 @@ def export_srt_from_words(word_segments, max_duration=10.0):
         f.write(srt_output)
     return path
 
-def load_wav_file(wav_path):
+def load_and_resample_wav(wav_path, target_sample_rate=16000):
     waveform, sample_rate = torchaudio.load(wav_path)
-    # Ha a fájl több csatornás, átalakítjuk mono-ra
+
     if waveform.ndimension() != 2 or waveform.shape[0] != 1:
-        waveform = waveform.mean(dim=0, keepdim=True)  # Átalakítás mono-ra
+        waveform = waveform.mean(dim=0, keepdim=True)
+
+    if sample_rate != target_sample_rate:
+        resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sample_rate)
+        waveform = resampler(waveform)
+        sample_rate = target_sample_rate
+
     if waveform.dtype != torch.int16:
-        waveform = waveform.to(torch.int16)
+        waveform = (waveform * 32767).clamp(-32768, 32767).to(torch.int16)
+
     return waveform, sample_rate
 
 st.title(TEXT["title"])
@@ -153,17 +160,19 @@ if uploaded_file is not None:
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                 tmp.write(uploaded_file.read())
-                wav_path = tmp.name
+                original_wav_path = tmp.name
 
-            # Load the WAV file with the custom function
-            waveform, sample_rate = load_wav_file(wav_path)
+            # Resample the audio
+            waveform, sample_rate = load_and_resample_wav(original_wav_path)
+            resampled_wav_path = os.path.join(tempfile.gettempdir(), "resampled.wav")
+            torchaudio.save(resampled_wav_path, waveform, sample_rate)
 
-            wf = wave.open(wav_path, "rb")
+            wf = wave.open(resampled_wav_path, "rb")
 
             if wf.getnchannels() != 1 or wf.getsampwidth() != 2:
                 st.warning("⚠️ A fájl nem mono 16-bit WAV. Az eredmények pontatlanok lehetnek.")
 
-            recognizer = KaldiRecognizer(model, wf.getframerate())
+            recognizer = KaldiRecognizer(model, sample_rate)
             recognizer.SetWords(True)
 
             result_text = ""
@@ -195,7 +204,7 @@ if uploaded_file is not None:
 
             st.subheader(TEXT["stats"])
             st.write(f"🌤️ {TEXT['words']}: {len(final_text.split())}")
-            st.write(f"⏱️ {TEXT['duration']}: {timedelta(seconds=int(wf.getnframes() / wf.getframerate()))}")
+            st.write(f"⏱️ {TEXT['duration']}: {timedelta(seconds=int(wf.getnframes() / sample_rate))}")
 
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -205,7 +214,8 @@ if uploaded_file is not None:
             with col3:
                 st.download_button(TEXT["export_srt"], open(export_srt_from_words(segments), "rb"), file_name="output.srt")
 
-            os.remove(wav_path)
+            os.remove(original_wav_path)
+            os.remove(resampled_wav_path)
 
         except Exception as e:
             st.error(f"❌ Hiba történt: {e}")
