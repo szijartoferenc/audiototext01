@@ -18,22 +18,22 @@ LANGUAGES = {
 }
 
 TEXTS = {
-    "hu": {
-        "title": "🗣️ Hang → Szöveg konvertáló",
-        "upload": "Csak WAV fájl feltöltése",
-        "processing": "⏳ Feldolgozás folyamatban...",
-        "done": "✅ Feldolgozás kész!",
-        "recognized": "📝 Felismert szöveg:",
-        "export_docx": "📂 DOCX mentése",
-        "export_pdf": "📄 PDF mentése",
-        "export_srt": "🎬 SRT exportálása",
-        "stats": "📊 Statisztika",
-        "words": "Szavak száma",
-        "duration": "Becsült időtartam",
-        "model": "🧠 Modell kiválasztása",
-        "theme": "🎨 Téma",
-        "detected_lang": "🌍 Felismert nyelv"
-    },
+    "de": {
+    "title": "🗣️ Audio → Text Konverter",
+    "upload": "Nur WAV-Dateien hochladen",
+    "processing": "⏳ Verarbeitung läuft...",
+    "done": "✅ Verarbeitung abgeschlossen!",
+    "recognized": "📝 Erkannter Text:",
+    "export_docx": "📂 Als DOCX speichern",
+    "export_pdf": "📄 Als PDF speichern",
+    "export_srt": "🎬 Als SRT exportieren",
+    "stats": "📊 Statistik",
+    "words": "Wortanzahl",
+    "duration": "Geschätzte Dauer",
+    "model": "🧠 Modell auswählen",
+    "theme": "🎨 Thema",
+    "detected_lang": "🌍 Erkannte Sprache"
+},
     "en": {
         "title": "🗣️ Speech → Text Converter",
         "upload": "Upload WAV file only",
