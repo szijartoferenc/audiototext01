@@ -1,0 +1,10 @@
+streamlit==1.44.1
+vosk==0.3.33 
+soundfile==0.13.1
+python-docx==0.8.11
+fpdf2==2.7.8
+srt==3.5.3
+torch==2.0.1
+torchaudio==2.0.2
+triton==2.0.0
+numpy==1.24.3
