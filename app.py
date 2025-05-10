@@ -58,7 +58,7 @@ TEXT = TEXTS[lang]
 @st.cache_resource
 def load_model(lang_code):
     model_paths = {
-        "hu": "models/vosk-model-small-hu-0.22",
+        "de": "models/vosk-model-small-de-0.15",
         "en": "models/vosk-model-small-en-us-0.15"
     }
     return Model(model_paths[lang_code])
